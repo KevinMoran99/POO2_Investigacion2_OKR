@@ -1,0 +1,208 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:b="http://bootsfaces.net/ui"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"       
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Lista de productos</title>
+        <h:outputStylesheet>
+            html, body {
+                height: 100%;
+            }
+            .container {
+                padding-bottom: 20px;
+                background-color: white; 
+                min-height: 100%
+            }
+            .tableHeader {
+                background-color: #7171bd;
+                color: white
+            }
+            .dataTables_wrapper {
+                background-color: #e0e0ea;
+                padding: 5px;
+                border-radius: 5px
+            }
+            /*Clases de las filas de la tabla*/
+            .odd, .even {
+                background-color: white
+            }
+            /*Botones de exportación de la tabla*/
+            .dt-buttons a {
+                background-color: #337ab7;
+                color: white
+            }
+        </h:outputStylesheet>
+    </h:head>
+    <h:body style="background-color: #a0d3f7">
+        <b:navBar brand="Trabajo de Investigación BootsFaces" fluid="true" fixed="true" inverse="true" style="background-color: #161d44; margin-bottom: 0px; border-color: inherit;">
+            <b:navbarLinks>
+                <b:navLink value="Categorías" outcome="categories.xhtml"></b:navLink>
+                <b:navLink value="Productos" outcome="products.xhtml"></b:navLink>
+                <b:dropMenu value="Integrantes">
+                    <b:navLink value="Raúl Alberto Alvarado Ramírez" href="#"/>
+                    <b:navLink value="Oscar Ernesto Méndez Argueta" href="#"/>
+                    <b:navLink value="Kevin Roberto Morán García" href="#"/>
+                </b:dropMenu>
+            </b:navbarLinks>
+        </b:navBar>
+        <b:container>
+            
+            <h1 align="center">Lista de productos</h1>
+            
+            <b:row>
+                <b:column span="3" offset="9">
+                    <b:form>
+                        <b:commandButton look="primary" ajax="true" update="@(#productForm)" style="font-size: 22px; width: 100%"
+                                         onclick="ajax:productBean.resetProduct();javascript:openAddModal()">Agregar producto</b:commandButton>
+                    </b:form>
+                </b:column>
+            </b:row>
+            <br/>
+            <h:form id="tableForm">
+                
+                <b:dataTable value="#{productBean.products}" id="productTable"
+                             var="prod"
+                             excel="true"
+                             csv="true"
+                             pdf="true"
+                             copy="true"
+                             print="true"
+                             striped="false"
+                             auto-update="false">
+                    <b:dataTableColumn value="#{prod.id}" label="ID" order="asc" content-style="font-weight: bold;background-color:white" header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{prod.name}" label="Producto"  header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{prod.description}" label="Descripción" header-style-class="tableHeader"/>
+                    <b:dataTableColumn label="Precio" header-style-class="tableHeader">
+                        $<h:outputText value="#{prod.price}">
+                            <f:convertNumber pattern="#0.00"/>
+                        </h:outputText>
+                    </b:dataTableColumn>
+                    <b:dataTableColumn value="#{prod.stock}" label="Cantidad" header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{prod.categoryId.name}" label="Categoría" header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{prod.state == true ? 'Activo' : 'Inactivo'}" label="Estado" content-style="#{prod.state == true ? 'color: green' : 'color: red'}" header-style-class="tableHeader"/>
+                    <b:dataTableColumn label="Operaciones" orderable="false" header-style-class="tableHeader">
+                        <b:row>
+                            <b:column span="5" offset="1">
+                                <b:commandButton value="Modificar" icon="edit" ajax="true" update="@(#productForm)" look="info"
+                                                 onclick="ajax:productBean.setProduct(prod);javascript:openUpdateModal()" >
+                                </b:commandButton>
+                            </b:column>
+                            <b:column span="6">
+                                <b:commandButton value="Eliminar" icon="trash" ajax="true" update="@form" look="danger"
+                                                 onclick="javascript:if(!confirm('¿Eliminar este producto?')) return false;ajax:productBean.deleteProduct(prod)" >
+                                </b:commandButton>
+                            </b:column>
+                        </b:row>
+                        
+                    </b:dataTableColumn>
+                </b:dataTable>
+                <b:growl  id="growlDelete" placementFrom="top" show-detail="true"
+                     global-only="true"
+                     show-summary="true" allow-dismiss="true"
+                     animation-enter="animated bounceInDown"
+                     animation-exit="animated flipOutX"
+                     escape="true" />
+            </h:form>
+            
+            <b:modal id="amodal" title="Datos de producto" styleClass="formValidationModalClass fade" header-class="tableHeader">
+                <b:form id="productForm">
+                    <b:inputText value="#{productBean.product.name}"
+                                 label="Nombre de producto"
+                                 required="true"
+                                 requiredMessage="Ingrese un nombre"
+                                 placeholder="Nombre"/>
+                    <b:message for="@previous"/>
+                    
+                    <b:inputTextarea value="#{productBean.product.description}"
+                                 label="Descripción"
+                                 required="true"
+                                 requiredMessage="Ingrese una descripción"
+                                 placeholder="Descripción"/>
+                    <b:message for="@previous"/>
+                    
+                    <b:inputText value="#{productBean.product.price}"
+                                 label="Precio"
+                                 required="true"
+                                 requiredMessage="Ingrese un precio"
+                                 placeholder="Precio"
+                                 validatorMessage="El precio debe ser mayor a 0 y menor a 1000"
+                                 converterMessage="El precio debe ser numérico">
+                        <f:validateDoubleRange minimum="0.01" maximum="999.99"/>
+                        <f:convertNumber minFractionDigits="2" />
+                        <f:facet name="prepend">
+                            <h:outputText value="$" />
+                        </f:facet>
+                    </b:inputText>
+                    <b:message for="@previous"/>
+                    
+                    <b:inputText value="#{productBean.product.stock}"
+                                 label="Cantidad en existencia"
+                                 required="true"
+                                 requiredMessage="Ingrese una cantidad"
+                                 placeholder="Cantidad"
+                                 validatorMessage="La cantidad debe ser mayor o igual a 0"
+                                 converterMessage="La cantidad debe ser numérica">
+                        <f:validateLongRange minimum="0"/>
+                    </b:inputText>
+                    <b:message for="@previous"/>
+                    
+                    <b:selectOneMenu value="#{productBean.product.categoryId}" required="true" label="Categoría" requiredMessage="Seleccione una categoría">
+                        <f:selectItems value="#{productBean.activeCategories}" var="cat" itemValue="#{cat}" itemLabel="#{cat.name}"/>
+                    </b:selectOneMenu>
+                    <b:message for="@previous"/>
+                    
+                    <label class="bf-required control-label">Estado</label>
+                    <b:panelGrid size="xs" columns="4">
+                        <b:radiobutton id="productState" value="#{productBean.product.state}" itemLabel="Activo" itemValue="true" required="true" requiredMessage="Especifique un estado"/>
+                        <b:radiobutton value="#{productBean.product.state}" itemLabel="Inactivo" itemValue="false" />
+                    </b:panelGrid>
+                    <b:message for="productState"/>
+                    <br/>  
+                    <b:row>
+                        <b:column>
+                            <b:button largeScreen="half"  value="Cancelar"
+                                             b:dismiss="modal" onclick="return false;"/>
+                            <b:commandButton id="addProduct" largeScreen="half" update="@form tableForm" ajax="true"
+                               b:dismiss="modal" rendered="#{productBean.product.id == null}"         
+                               value="Guardar" look="success"
+                               oncomplete="if(!validationFailed) { $('.formValidationModalClass').modal('hide') } "
+                               action="#{productBean.addProduct()}"/>
+                            <b:commandButton id="updateProduct" largeScreen="half" update="@form tableForm" ajax="true"
+                               b:dismiss="modal" rendered="#{productBean.product.id != null}"         
+                               value="Modificar" look="success"
+                               oncomplete="if(!validationFailed) { $('.formValidationModalClass').modal('hide') } "
+                               action="#{productBean.updateProduct()}"/>
+                        </b:column>
+                    </b:row>
+                    <b:growl for="addProduct" placementFrom="top" show-detail="true"
+                             global-only="false"
+                             show-summary="true" allow-dismiss="true"
+                             animation-enter="animated bounceInDown"
+                             animation-exit="animated flipOutX"
+                             escape="true" />
+                    <b:fetchBeanInfos />
+                    <b:growl for="updateProduct" placementFrom="top" show-detail="true"
+                             global-only="false"
+                             show-summary="true" allow-dismiss="true"
+                             animation-enter="animated bounceInDown"
+                             animation-exit="animated flipOutX"
+                             escape="true" />
+                    <b:fetchBeanInfos />
+                </b:form>
+            </b:modal>
+        </b:container>
+        <h:outputScript>
+            function openAddModal() {
+                $('#amodal_Label').html('Agregar producto')
+                $('#amodal').modal()
+            }
+            function openUpdateModal() {
+                $('#amodal_Label').html('Modificar producto')
+                $('#amodal').modal()
+            }
+        </h:outputScript>
+    </h:body>
+</html>
+

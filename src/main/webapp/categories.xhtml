@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:b="http://bootsfaces.net/ui"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"       
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <h:head>
+        <title>Lista de categorías</title>
+        <h:outputStylesheet>
+            html, body {
+                height: 100%;
+            }
+            .container {
+                padding-bottom: 20px;
+                background-color: white; 
+                min-height: 100%
+            }
+            .tableHeader {
+                background-color: #7171bd;
+                color: white
+            }
+            .dataTables_wrapper {
+                background-color: #e0e0ea;
+                padding: 5px;
+                border-radius: 5px
+            }
+            /*Clases de las filas de la tabla*/
+            .odd, .even {
+                background-color: white
+            }
+            /*Botones de exportación de la tabla*/
+            .dt-buttons a {
+                background-color: #337ab7;
+                color: white
+            }
+        </h:outputStylesheet>
+    </h:head>
+    <h:body style="background-color: #a0d3f7">
+        <b:navBar brand="Trabajo de Investigación BootsFaces" fluid="true" fixed="true" inverse="true" style="background-color: #161d44; margin-bottom: 0px; border-color: inherit;">
+            <b:navbarLinks>
+                <b:navLink value="Categorías" outcome="categories.xhtml"></b:navLink>
+                <b:navLink value="Productos" outcome="products.xhtml"></b:navLink>
+                <b:dropMenu value="Integrantes">
+                    <b:navLink value="Raúl Alberto Alvarado Ramírez" href="#"/>
+                    <b:navLink value="Oscar Ernesto Méndez Argueta" href="#"/>
+                    <b:navLink value="Kevin Roberto Morán García" href="#"/>
+                </b:dropMenu>
+            </b:navbarLinks>
+        </b:navBar>
+        <b:container>
+            
+            <h1 align="center">Lista de categorías</h1>
+            
+            <b:row>
+                <b:column span="3" offset="9">
+                    <b:form>
+                        <b:commandButton look="primary" ajax="true" update="@(#categoryForm)" style="font-size: 22px; width: 100%"
+                                         onclick="ajax:categoryBean.resetCategory();javascript:openAddModal()">Agregar categoría</b:commandButton>
+                    </b:form>
+                </b:column>
+            </b:row>
+            <br/>
+            <h:form id="tableForm">
+                
+                <b:dataTable value="#{categoryBean.categories}" id="categoryTable"
+                             var="cat"
+                             excel="true"
+                             csv="true"
+                             pdf="true"
+                             copy="true"
+                             print="true"
+                             striped="false"
+                             auto-update="false">
+                    <b:dataTableColumn value="#{cat.id}" label="ID" order="asc" content-style="font-weight: bold;background-color:white" header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{cat.name}" label="Categoría"  header-style-class="tableHeader"/>
+                    <b:dataTableColumn value="#{cat.description}" label="Descripción" header-style-class="tableHeader"/>
+                    <b:dataTableColumn label="Fecha de creación" header-style-class="tableHeader">
+                        <h:outputText value="#{cat.createdAt}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </h:outputText>
+                    </b:dataTableColumn>
+                    <b:dataTableColumn value="#{cat.state == true ? 'Activo' : 'Inactivo'}" label="Estado" content-style="#{cat.state == true ? 'color: green' : 'color: red'}" header-style-class="tableHeader"/>
+                    <b:dataTableColumn label="Operaciones" orderable="false" header-style-class="tableHeader">
+                        <b:row>
+                            <b:column span="5" offset="1">
+                                <b:commandButton value="Modificar" icon="edit" ajax="true" update="@(#categoryForm)" look="info"
+                                                 onclick="ajax:categoryBean.setCategory(cat);javascript:openUpdateModal()" >
+                                </b:commandButton>
+                            </b:column>
+                            <b:column span="6">
+                                <b:commandButton value="Eliminar" icon="trash" ajax="true" update="@form" look="danger"
+                                                 onclick="javascript:if(!confirm('¿Eliminar esta categoría?')) return false;ajax:categoryBean.deleteCategory(cat)" >
+                                </b:commandButton>
+                            </b:column>
+                        </b:row>
+                        
+                    </b:dataTableColumn>
+                </b:dataTable>
+                <b:growl  id="growlDelete" placementFrom="top" show-detail="true"
+                     global-only="true"
+                     show-summary="true" allow-dismiss="true"
+                     animation-enter="animated bounceInDown"
+                     animation-exit="animated flipOutX"
+                     escape="true" />
+            </h:form>
+            
+            <b:modal id="amodal" title="Datos de categoría" styleClass="formValidationModalClass fade" header-class="tableHeader">
+                <b:form id="categoryForm">
+                    <b:inputText value="#{categoryBean.category.name}"
+                                 label="Nombre de categoría"
+                                 required="true"
+                                 requiredMessage="Ingrese un nombre"
+                                 placeholder="Nombre"/>
+                    <b:message for="@previous"/>
+                    
+                    <b:inputTextarea value="#{categoryBean.category.description}"
+                                 label="Descripción"
+                                 required="true"
+                                 requiredMessage="Ingrese una descripción"
+                                 placeholder="Descripción"/>
+                    <b:message for="@previous"/>
+                    
+                    <b:dateTimePicker value="#{categoryBean.category.createdAt}"
+                                      label="Fecha de creación"
+                                      required="true"
+                                      requiredMessage="Ingrese una fecha"
+                                      format="DD/MM/YYYY"/>
+                    <b:message for="@previous"/>
+                    <b:label text="Este campo es editable para demostrar el uso del dateTimePicker"></b:label><br/><br/>
+                    
+                    <label class="bf-required control-label">Estado</label>
+                    <b:panelGrid size="xs" columns="4">
+                        <b:radiobutton id="categoryState" value="#{categoryBean.category.state}" itemLabel="Activo" itemValue="true" required="true" requiredMessage="Especifique un estado"/>
+                        <b:radiobutton value="#{categoryBean.category.state}" itemLabel="Inactivo" itemValue="false" />
+                    </b:panelGrid>
+                    <b:message for="categoryState"/>
+                    <br/>  
+                    <b:row>
+                        <b:column>
+                            <b:button largeScreen="half"  value="Cancelar"
+                                             b:dismiss="modal" onclick="return false;"/>
+                            <b:commandButton id="addCategory" largeScreen="half" update="@form tableForm" ajax="true"
+                               b:dismiss="modal" rendered="#{categoryBean.category.id == null}"         
+                               value="Guardar" look="success"
+                               oncomplete="if(!validationFailed) { $('.formValidationModalClass').modal('hide') } "
+                               action="#{categoryBean.addCategory()}"/>
+                            <b:commandButton id="updateCategory" largeScreen="half" update="@form tableForm" ajax="true"
+                               b:dismiss="modal" rendered="#{categoryBean.category.id != null}"         
+                               value="Modificar" look="success"
+                               oncomplete="if(!validationFailed) { $('.formValidationModalClass').modal('hide') } "
+                               action="#{categoryBean.updateCategory()}"/>
+                        </b:column>
+                    </b:row>
+                    <b:growl for="addCategory" placementFrom="top" show-detail="true"
+                             global-only="false"
+                             show-summary="true" allow-dismiss="true"
+                             animation-enter="animated bounceInDown"
+                             animation-exit="animated flipOutX"
+                             escape="true" />
+                    <b:fetchBeanInfos />
+                    <b:growl for="updateCategory" placementFrom="top" show-detail="true"
+                             global-only="false"
+                             show-summary="true" allow-dismiss="true"
+                             animation-enter="animated bounceInDown"
+                             animation-exit="animated flipOutX"
+                             escape="true" />
+                    <b:fetchBeanInfos />
+                </b:form>
+            </b:modal>
+        </b:container>
+        <h:outputScript>
+            function openAddModal() {
+                $('#amodal_Label').html('Agregar categoría')
+                $('#amodal').modal()
+            }
+            function openUpdateModal() {
+                $('#amodal_Label').html('Modificar categoría')
+                $('#amodal').modal()
+            }
+        </h:outputScript>
+    </h:body>
+</html>
+
